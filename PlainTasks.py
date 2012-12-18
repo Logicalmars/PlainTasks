@@ -20,6 +20,8 @@ class PlainTasksBase(sublime_plugin.TextCommand):
         else:
             self.done_tag = ""
             self.canc_tag = ""
+
+        self.start_tag = "@start"
         self.runCommand(edit)
 
 
@@ -98,6 +100,21 @@ class PlainTasksCompleteCommand(PlainTasksBase):
             new_pt = sublime.Region(pt.a + ofs, pt.b + ofs)
             self.view.sel().add(new_pt)
 
+class PlainTasksStartTaskCommand(PlainTasksBase):
+    def runCommand(self, edit):
+        original = [r for r in self.view.sel()]
+        start_line_end = ' %s %s' % (self.start_tag, datetime.now().strftime(self.date_format))
+        offset = len(start_line_end)
+        for region in self.view.sel():
+            line = self.view.line(region)
+            line_contents = self.view.substr(line).rstrip()
+            self.view.insert(edit, line.end(), start_line_end)
+            
+        self.view.sel().clear()
+        for ind, pt in enumerate(original):
+            ofs = ind * offset
+            new_pt = sublime.Region(pt.a + ofs, pt.b + ofs)
+            self.view.sel().add(new_pt)
 
 class PlainTasksCancelCommand(PlainTasksBase):
     def runCommand(self, edit):
